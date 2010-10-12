@@ -97,12 +97,30 @@ module RedmineWysiwygTextile
                text2.innerHTML = TheText.responseText;
             }
         ") + 
+        javascript_tag("
+        function Tinymcesubmit(id) {              
+               if (tinyMCE.get(id)) {
+                    tinyMCE.execCommand('mceRemoveControl', false, id);
+                    new Ajax.Request('/convert/wysiwygtohtmltotextile', {asynchronous:false, evalScripts:false, method:'post', onSuccess:function(request){UpdateFile(request)}, parameters:$('#{field_id}').serialize()});
+                    the_jstoolbar.toolbar.style.display = 'block';
+               }
+            } 
+            function AddWikiformSubmit(textarea) {
+              var aTextArea=document.getElementById(textarea);
+              if (aTextArea) {
+                  aform=aTextArea.form;
+                  if (aform) {
+                     aform.onsubmit=function(){return Tinymcesubmit(textarea);};
+                  }
+              }
+             }
+          ") +
          "<form>
             <Input type = radio Name = \"textilewysiwyg\" CHECKED onClick=\"javascript:toggleEditor('#{field_id}',0)\">textile
             <Input type = radio Name = \"textilewysiwyg\" onClick=\"javascript:toggleEditor('#{field_id}',1)\">wysiwyg
             </form>
             <div id='workarea' class='wiki'></div>" +
-            javascript_tag("var the_jstoolbar = new jsToolBar($('#{field_id}')); the_jstoolbar.setHelpLink('#{help_link}'); the_jstoolbar.draw();")
+            javascript_tag("var the_jstoolbar = new jsToolBar($('#{field_id}')); the_jstoolbar.setHelpLink('#{help_link}'); the_jstoolbar.draw();AddWikiformSubmit('#{field_id}');")
     end
     
     def initial_page_content(page)

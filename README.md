@@ -19,5 +19,8 @@ Usage
 
 When editing a wiki page a radio button will be displayed below the Save button. This radio button allows the user to switch between the standard redmine textile editor and the tinymce wysiwyg editor.
 
+History
+
+12 Oct 2010 - v0.11 - fixed bug related to saving raw html in Wysiwyg mode.
 
     
