@@ -22,5 +22,6 @@ When editing a wiki page a radio button will be displayed below the Save button.
 History
 
 12 Oct 2010 - v0.11 - fixed bug related to saving raw html in Wysiwyg mode.
+14 Oct 2010 - v0.12 - preview now works in wysiwyg mode.
 
     

@@ -1,6 +1,8 @@
-
-require "i18n.rb"
-
+#
+# Redmine Wysiwyg Textile Editor
+#
+# P.J.Lawrence October 2010
+#
 module RedmineWysiwygTextile
   module Helper
     unloadable
@@ -63,24 +65,27 @@ module RedmineWysiwygTextile
             }
             function toggleEditor(id,DisplayTiny) {
                 if (DisplayTiny==1 && tinyenabled==false) {
-                    new Ajax.Request('/convert/wysiwygtotextiletohtml', {asynchronous:false, evalScripts:false, method:'post', onSuccess:function(request){UpdateFile(request)}, parameters:$('#{field_id}').serialize()});
-                    setuptinymce();
-                    tinyenabled=true;
-                    the_jstoolbar.toolbar.style.display = 'none';
-                    return;
+                  new Ajax.Request('/convert/wysiwygtotextiletohtml', {asynchronous:false, evalScripts:false, method:'post', onSuccess:function(request){UpdateFile(request)}, parameters:$('#{field_id}').serialize()});
+                  setuptinymce();
+                  tinyenabled=true;
+                  the_jstoolbar.toolbar.style.display = 'none';
+                  PreviewElem.onclick=function(){ UpdatePreviewHtml(); }
+                  return;
                 }
                 if (!tinyMCE.get(id)) {
                   if (DisplayTiny==1) {
-                    new Ajax.Request('/convert/wysiwygtotextiletohtml', {asynchronous:false, evalScripts:false, method:'post', onSuccess:function(request){UpdateFile(request)}, parameters:$('#{field_id}').serialize()});
-                    the_jstoolbar.toolbar.style.display = 'none';
-                    tinyMCE.execCommand('mceAddControl', false, id);
+                     new Ajax.Request('/convert/wysiwygtotextiletohtml', {asynchronous:false, evalScripts:false, method:'post', onSuccess:function(request){UpdateFile(request)}, parameters:$('#{field_id}').serialize()});
+                     the_jstoolbar.toolbar.style.display = 'none';
+                     tinyMCE.execCommand('mceAddControl', false, id);
+                     PreviewElem.onclick=function(){ UpdatePreviewHtml(); }
                   }
                 }
                 else {
                    if (DisplayTiny==0) {
-                    tinyMCE.execCommand('mceRemoveControl', false, id);
-                    new Ajax.Request('/convert/wysiwygtohtmltotextile', {asynchronous:false, evalScripts:false, method:'post', onSuccess:function(request){UpdateFile(request)}, parameters:$('#{field_id}').serialize()});
-                    the_jstoolbar.toolbar.style.display = 'block';
+                     tinyMCE.execCommand('mceRemoveControl', false, id);
+                     new Ajax.Request('/convert/wysiwygtohtmltotextile', {asynchronous:false, evalScripts:false, method:'post', onSuccess:function(request){UpdateFile(request)}, parameters:$('#{field_id}').serialize()});
+                     the_jstoolbar.toolbar.style.display = 'block';
+                     PreviewElem.onclick=function(){ eval(TheTextilePreviewFunction) }
                    }
                 }
             }
@@ -88,39 +93,74 @@ module RedmineWysiwygTextile
                var text1 = document.getElementById('#{field_id}');
                text1.value = TheText.responseText;
                if (tinyenabled==true) {
-                    tinyMCE.get('#{field_id}').setContent(TheText.responseText);
+                  tinyMCE.get('#{field_id}').setContent(TheText.responseText);
                }
                return true;
-            }
-            function UpdatePreviewText(TheText) {
-               var text2 = document.getElementById('#{:preview}');
-               text2.innerHTML = TheText.responseText;
             }
         ") + 
         javascript_tag("
         function Tinymcesubmit(id) {              
                if (tinyMCE.get(id)) {
-                    tinyMCE.execCommand('mceRemoveControl', false, id);
-                    new Ajax.Request('/convert/wysiwygtohtmltotextile', {asynchronous:false, evalScripts:false, method:'post', onSuccess:function(request){UpdateFile(request)}, parameters:$('#{field_id}').serialize()});
-                    the_jstoolbar.toolbar.style.display = 'block';
+                  tinyMCE.execCommand('mceRemoveControl', false, id);
+                  new Ajax.Request('/convert/wysiwygtohtmltotextile', {asynchronous:false, evalScripts:false, method:'post', onSuccess:function(request){UpdateFile(request)}, parameters:$('#{field_id}').serialize()});
+                  the_jstoolbar.toolbar.style.display = 'block';
                }
             } 
             function AddWikiformSubmit(textarea) {
-              var aTextArea=document.getElementById(textarea);
-              if (aTextArea) {
-                  aform=aTextArea.form;
-                  if (aform) {
-                     aform.onsubmit=function(){return Tinymcesubmit(textarea);};
-                  }
-              }
+               var aTextArea=document.getElementById(textarea);
+               if (aTextArea) {
+                 aform=aTextArea.form;
+                 if (aform) {
+                    aform.onsubmit=function(){return Tinymcesubmit(textarea);};
+                 }
+               }
              }
+          ") +
+          javascript_tag("
+          var ThePreviewFunction=null;
+          var TheTextilePreviewFunction=null;
+          var PreviewElem=null;
+          function UpdatePreviewTextile(TheText) {
+               var text2 = document.getElementById('#{:preview}');
+               text2.innerHTML = TheText.responseText;
+               var text3=TheText.responseText;
+               text3 ='content%5Btext%5D='+escape(text3);
+               eval(ThePreviewFunction);
+          }
+          function UpdatePreviewHtml() {
+               var TheText;
+               if (tinyenabled==true) {
+                  TheText = tinyMCE.get('#{field_id}').getContent();
+                  TheText ='content%5Btext%5D='+escape(TheText);
+                  new Ajax.Request('/convert/wysiwygtohtmltotextile', {asynchronous:false, evalScripts:false, method:'post', onSuccess:function(request){UpdatePreviewTextile(request)}, parameters:TheText});
+               }
+          }
+          function GetPreviewFunction(textarea) {
+                var elemlist = document.getElementsByName(\"commit\")
+                var elem=elemlist[0]
+                do {
+                  elem = elem.nextSibling;
+                  if (elem) {
+                      if (elem.nodeName.toLowerCase() == \"a\") {
+                          if (elem.onclick.toString().match(/Ajax.Updater.+preview/)){ 
+                              PreviewElem=elem;
+                              TheTextilePreviewFunction=PreviewElem.onclick.toString();
+                              TheTextilePreviewFunction=TheTextilePreviewFunction.replace(\"function onclick(event)\", \"\");
+                              TheTextilePreviewFunction=TheTextilePreviewFunction.replace(\"return false;\", \"\");
+                              ThePreviewFunction= TheTextilePreviewFunction.replace(\"Form.serialize(\\\"wiki_form\\\")\", \"text3\");
+                              break;
+                           }
+                       }
+                   }
+                } while (elem);
+           }
           ") +
          "<form>
             <Input type = radio Name = \"textilewysiwyg\" CHECKED onClick=\"javascript:toggleEditor('#{field_id}',0)\">textile
             <Input type = radio Name = \"textilewysiwyg\" onClick=\"javascript:toggleEditor('#{field_id}',1)\">wysiwyg
             </form>
             <div id='workarea' class='wiki'></div>" +
-            javascript_tag("var the_jstoolbar = new jsToolBar($('#{field_id}')); the_jstoolbar.setHelpLink('#{help_link}'); the_jstoolbar.draw();AddWikiformSubmit('#{field_id}');")
+            javascript_tag("var the_jstoolbar = new jsToolBar($('#{field_id}')); the_jstoolbar.setHelpLink('#{help_link}'); the_jstoolbar.draw();GetPreviewFunction('#{field_id}');AddWikiformSubmit('#{field_id}');")
     end
     
     def initial_page_content(page)
@@ -128,9 +168,6 @@ module RedmineWysiwygTextile
     end
 
     def heads_for_wiki_formatter
-      #stylesheet_link_tag('/tiny_mce/themes/advanced/skins/default/wysiwygtextile/content.css', :plugin => 'redmine_wysiwyg_textile' ) +
-      #stylesheet_link_tag('/tiny_mce/themes/advanced/skins/default/wysiwygtextile/ui.css', :plugin => 'redmine_wysiwyg_textile' ) +
-      #stylesheet_link_tag('/tiny_mce/themes/advanced/skins/default/wysiwygtextile/dialog.css', :plugin => 'redmine_wysiwyg_textile' ) +
       stylesheet_link_tag('jstoolbar')
     end
   end
