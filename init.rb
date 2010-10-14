@@ -11,7 +11,7 @@ Redmine::Plugin.register :redmine_wysiwyg_textile do
     name 'Redmine Wysiwyg Textile'
     author 'P.J. Lawrence'
     description 'A TinyMCE test application for Textile wiki pages'
-    version '0.13'
+    version '0.14'
     
     wiki_format_provider 'textile wysiwyg', RedmineWysiwygTextile::WikiFormatter, \
                                              RedmineWysiwygTextile::Helper

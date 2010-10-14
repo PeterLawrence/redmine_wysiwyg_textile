@@ -108,11 +108,12 @@ class HTMLToTextileParser < SGMLParser
     end
   end
 
-  PAIRS = { 'blockquote' => 'bq', 'p' => 'p' }
+ #PAIRS = { 'blockquote' => 'bq', 'p' => 'p' }
+  PAIRS = { 'blockquote' => 'bq' } # p removed 14/10/10
   QUICKTAGS = { 'b' => '*', 'strong' => '*', 
     'i' => '_', 'em' => '_', 'cite' => '??', 's' => '-', 
     'sup' => '^', 'sub' => '~', 'code' => '@', 'span' => '%',
-    'del' => '-', 'ins' => '+','pre' => 'pre'}
+    'del' => '-', 'ins' => '+','pre' => 'pre', 'p' => ''} # p added 14/10/10
   
   PAIRS.each do |key, value|
     define_method "start_#{key}" do |attributes|
@@ -197,6 +198,13 @@ class HTMLToTextileParser < SGMLParser
   def end_img
   end
 
+  def start_p(attrs)
+  end
+
+  def end_p
+    write("\n\n")
+  end
+  
   def start_pre(attrs)
     write("\n<pre>\n")
   end
