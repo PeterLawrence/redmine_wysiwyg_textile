@@ -126,6 +126,7 @@ module RedmineWysiwygTextile
                var text3=TheText.responseText;
                text3 ='content%5Btext%5D='+escape(text3);
                eval(ThePreviewFunction);
+               return (false);
           }
           function UpdatePreviewHtml() {
                var TheText;
@@ -134,6 +135,7 @@ module RedmineWysiwygTextile
                   TheText ='content%5Btext%5D='+escape(TheText);
                   new Ajax.Request('/convert/wysiwygtohtmltotextile', {asynchronous:false, evalScripts:false, method:'post', onSuccess:function(request){UpdatePreviewTextile(request)}, parameters:TheText});
                }
+               return (false);
           }
           function GetPreviewFunction(textarea) {
                 var elemlist = document.getElementsByName(\"commit\")
@@ -145,9 +147,12 @@ module RedmineWysiwygTextile
                           if (elem.onclick.toString().match(/Ajax.Updater.+preview/)){ 
                               PreviewElem=elem;
                               TheTextilePreviewFunction=PreviewElem.onclick.toString();
+                              
                               TheTextilePreviewFunction=TheTextilePreviewFunction.replace(\"function onclick(event)\", \"\");
+                              TheTextilePreviewFunction=TheTextilePreviewFunction.replace(\"function anonymous()\", \"\");
                               TheTextilePreviewFunction=TheTextilePreviewFunction.replace(\"return false;\", \"\");
                               ThePreviewFunction= TheTextilePreviewFunction.replace(\"Form.serialize(\\\"wiki_form\\\")\", \"text3\");
+                              ThePreviewFunction= ThePreviewFunction.replace(\"Form.serialize(\\'wiki_form\\')\", 'text3');
                               break;
                            }
                        }
